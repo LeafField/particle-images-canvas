@@ -1,0 +1,18 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+#canvas1 {
+  background-color: blue;
+  position: absolute;
+}
+
+.controls {
+  position: absolute;
+  z-index: 100;
+}
+
+img {
+  display: none;
+}
