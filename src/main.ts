@@ -15,6 +15,12 @@ window.addEventListener("load", () => {
     originX: number;
     originY: number;
     ease: number;
+    dx: number;
+    dy: number;
+    distance: number;
+    force: number;
+    angle: number;
+    friction: number;
 
     constructor(
       private effect: Effect,
@@ -29,7 +35,13 @@ window.addEventListener("load", () => {
       this.size = this.effect.gap;
       this.vx = 0;
       this.vy = 0;
-      this.ease = 0.01;
+      this.ease = 0.03;
+      this.friction = 0.95;
+      this.dx = 0;
+      this.dy = 0;
+      this.distance = 0;
+      this.force = 0;
+      this.angle = 0;
     }
 
     draw(context: CanvasRenderingContext2D) {
@@ -38,8 +50,23 @@ window.addEventListener("load", () => {
     }
 
     update() {
-      this.x += (this.originX - this.x) * this.ease;
-      this.y += (this.originY - this.y) * this.ease;
+      if (this.effect.mouse.x && this.effect.mouse.y) {
+        this.dx = this.effect.mouse.x - this.x;
+        this.dy = this.effect.mouse.y - this.y;
+        this.distance = this.dx ** 2 + this.dy ** 2;
+        this.force = -this.effect.mouse.radius / this.distance;
+      }
+
+      if (this.distance < this.effect.mouse.radius) {
+        this.angle = Math.atan2(this.dy, this.dx);
+        this.vx += this.force * Math.cos(this.angle);
+        this.vy += this.force * Math.sin(this.angle);
+      }
+
+      this.x +=
+        (this.vx *= this.friction) + (this.originX - this.x) * this.ease;
+      this.y +=
+        (this.vy *= this.friction) + (this.originY - this.y) * this.ease;
     }
     warp() {
       this.x = Math.random() * this.effect.width;
@@ -56,6 +83,7 @@ window.addEventListener("load", () => {
     x: number;
     y: number;
     gap: number;
+    mouse: Mouse;
 
     constructor(public width: number, public height: number) {
       this.particlesArray = [];
@@ -65,6 +93,15 @@ window.addEventListener("load", () => {
       this.x = this.centerX - this.image.width * 0.5;
       this.y = this.centerY - this.image.height * 0.5;
       this.gap = 5;
+      this.mouse = {
+        radius: 3000,
+        x: undefined,
+        y: undefined,
+      };
+      window.addEventListener("mousemove", (event) => {
+        this.mouse.x = event.x;
+        this.mouse.y = event.y;
+      });
     }
 
     init(context: CanvasRenderingContext2D) {
@@ -124,3 +161,9 @@ window.addEventListener("load", () => {
     effect.warp();
   });
 });
+
+type Mouse = {
+  radius: number;
+  x: number | undefined;
+  y: number | undefined;
+};
