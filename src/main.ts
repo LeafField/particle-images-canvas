@@ -21,6 +21,8 @@ window.addEventListener("load", () => {
     force: number;
     angle: number;
     friction: number;
+    active: boolean;
+    timeout: number | undefined;
 
     constructor(
       private effect: Effect,
@@ -36,12 +38,14 @@ window.addEventListener("load", () => {
       this.vx = 0;
       this.vy = 0;
       this.ease = 0.03;
-      this.friction = 0.95;
+      this.friction = 0.98;
       this.dx = 0;
       this.dy = 0;
       this.distance = 0;
       this.force = 0;
       this.angle = 0;
+      this.active = true;
+      this.timeout = undefined;
     }
 
     draw(context: CanvasRenderingContext2D) {
@@ -50,6 +54,7 @@ window.addEventListener("load", () => {
     }
 
     update() {
+      if (!this.active) return;
       if (this.effect.mouse.x && this.effect.mouse.y) {
         this.dx = this.effect.mouse.x - this.x;
         this.dy = this.effect.mouse.y - this.y;
@@ -71,7 +76,41 @@ window.addEventListener("load", () => {
     warp() {
       this.x = Math.random() * this.effect.width;
       this.y = Math.random() * this.effect.height;
-      this.ease = 0.05;
+      this.ease = 0.1;
+      this.size = this.effect.gap;
+    }
+    blocks() {
+      this.x = Math.random() * this.effect.width;
+      this.y =
+        Math.random() > 0.5
+          ? Math.random() * this.effect.height
+          : this.effect.height;
+      this.ease = 0.04;
+      this.size = 10;
+    }
+    assemble() {
+      clearTimeout(this.timeout);
+      this.x = Math.random() * this.effect.width;
+      this.y = Math.random() * this.effect.height;
+      this.ease = 0.2;
+      this.size = this.effect.gap;
+      this.active = false;
+      this.effect.counter++;
+      this.timeout = setTimeout(() => {
+        this.active = true;
+      }, this.effect.counter * 0.5);
+    }
+    particlePrint() {
+      clearTimeout(this.timeout);
+      this.x = this.effect.width * 0.5;
+      this.y = this.effect.height;
+      this.ease = 0.2;
+      this.size = this.effect.gap;
+      this.active = false;
+      this.effect.counter++;
+      this.timeout = setTimeout(() => {
+        this.active = true;
+      }, this.effect.counter);
     }
   }
 
@@ -84,6 +123,7 @@ window.addEventListener("load", () => {
     y: number;
     gap: number;
     mouse: Mouse;
+    counter: number;
 
     constructor(public width: number, public height: number) {
       this.particlesArray = [];
@@ -102,6 +142,7 @@ window.addEventListener("load", () => {
         this.mouse.x = event.x;
         this.mouse.y = event.y;
       });
+      this.counter = 0;
     }
 
     init(context: CanvasRenderingContext2D) {
@@ -142,6 +183,20 @@ window.addEventListener("load", () => {
     warp() {
       this.particlesArray.forEach((particle) => particle.warp());
     }
+
+    blocks() {
+      this.particlesArray.forEach((particle) => particle.blocks());
+    }
+
+    assemble() {
+      this.counter = 0;
+      this.particlesArray.forEach((particle) => particle.assemble());
+    }
+
+    particlePrint() {
+      this.counter = 0;
+      this.particlesArray.forEach((particle) => particle.particlePrint());
+    }
   }
 
   const effect = new Effect(canvas.width, canvas.height);
@@ -159,6 +214,25 @@ window.addEventListener("load", () => {
   const warpButton = document.querySelector<HTMLButtonElement>(".warpButton")!;
   warpButton.addEventListener("click", () => {
     effect.warp();
+  });
+
+  const blocksButton =
+    document.querySelector<HTMLButtonElement>(".blocksButton")!;
+  blocksButton.addEventListener("click", () => {
+    effect.blocks();
+  });
+
+  const assembleButton =
+    document.querySelector<HTMLButtonElement>(".assembleButton")!;
+  assembleButton.addEventListener("click", () => {
+    effect.assemble();
+  });
+
+  const particlePrintButton = document.querySelector<HTMLButtonElement>(
+    ".particlePrintButton"
+  )!;
+  particlePrintButton.addEventListener("click", () => {
+    effect.particlePrint();
   });
 });
 
